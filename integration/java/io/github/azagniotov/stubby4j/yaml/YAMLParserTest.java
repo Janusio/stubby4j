@@ -13,8 +13,11 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.URL;
 import java.util.List;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -22,6 +25,7 @@ import static io.github.azagniotov.stubby4j.stubs.StubbableAuthorizationType.BAS
 import static io.github.azagniotov.stubby4j.stubs.StubbableAuthorizationType.BEARER;
 import static io.github.azagniotov.stubby4j.stubs.StubbableAuthorizationType.CUSTOM;
 import static io.github.azagniotov.stubby4j.utils.FileUtils.BR;
+import static io.github.azagniotov.stubby4j.utils.StringUtils.inputStreamToString;
 
 
 public class YAMLParserTest {
@@ -224,6 +228,73 @@ public class YAMLParserTest {
         final StubHttpLifecycle actualHttpLifecycle = loadedHttpCycles.get(0);
 
         assertThat(actualHttpLifecycle.getDescription()).isEqualTo("wobble");
+    }
+
+    @Test
+    public void shouldUnmarshall_WhenYAMLValid_WithUUID() throws Exception {
+
+        final String url = "^/[a-z]{3}/[0-9]+/?$";
+        final String yaml = YAML_BUILDER.newStubbedRequest()
+                .withMethodGet()
+                .withUrl(url)
+                .withDescription("wobble")
+                .withUUID("9136d8b7-f7a7-478d-97a5-53292484aaf6")
+                .newStubbedResponse()
+                .withStatus("301").build();
+
+        final List<StubHttpLifecycle> loadedHttpCycles = unmarshall(yaml);
+        final StubHttpLifecycle actualHttpLifecycle = loadedHttpCycles.get(0);
+
+        assertThat(actualHttpLifecycle.getUUID()).isEqualTo("9136d8b7-f7a7-478d-97a5-53292484aaf6");
+    }
+
+    @Test
+    public void shouldUnmarshall_toCompleteYaml_WithUUIDAndDescription() throws Exception {
+
+        final String url = "^/[a-z]{3}/[0-9]+/?$";
+        final String yaml = YAML_BUILDER.newStubbedRequest()
+                .withMethodGet()
+                .withUrl(url)
+                .withDescription("wobble")
+                .withUUID("9136d8b7-f7a7-478d-97a5-53292484aaf6")
+                .newStubbedResponse()
+                .withStatus("301").build();
+
+        final List<StubHttpLifecycle> loadedHttpCycles = unmarshall(yaml);
+        final StubHttpLifecycle actualHttpLifecycle = loadedHttpCycles.get(0);
+
+        assertThat(actualHttpLifecycle.getCompleteYAML()).isEqualTo(
+                "- request:\n" +
+                        "    method:\n" +
+                        "    - GET\n" +
+                        "    url: ^/[a-z]{3}/[0-9]+/?$\n" +
+                        "  description: wobble\n" +
+                        "  uuid: 9136d8b7-f7a7-478d-97a5-53292484aaf6\n" +
+                        "  response:\n" +
+                        "    status: 301\n");
+    }
+
+    @Test
+    public void shouldUnmarshall_toCompleteYamlFromFile_WithUUIDAndDescription() throws Exception {
+        final URL yamlUrl = YAMLParserTest.class.getResource("/yaml/feature.stub.yaml");
+        final InputStream stubsConfigStream = yamlUrl.openStream();
+        final String parentDirectory = new File(yamlUrl.getPath()).getParent();
+        final List<StubHttpLifecycle> loadedHttpCycles = new YAMLParser().parse(parentDirectory, inputStreamToString(stubsConfigStream));
+        final StubHttpLifecycle actualHttpLifecycle = loadedHttpCycles.get(0);
+
+        assertThat(actualHttpLifecycle.getCompleteYAML()).isEqualTo(
+                "- description: Stub one\n" +
+                        "  uuid: 9136d8b7-f7a7-478d-97a5-53292484aaf6\n" +
+                        "  request:\n" +
+                        "    url: ^/one$\n" +
+                        "    method: GET\n" +
+                        "  response:\n" +
+                        "    status: 200\n" +
+                        "    latency: 100\n" +
+                        "    body: One!\n");
+
+        assertThat(actualHttpLifecycle.getDescription()).isEqualTo("Stub one");
+        assertThat(actualHttpLifecycle.getUUID()).isEqualTo("9136d8b7-f7a7-478d-97a5-53292484aaf6");
     }
 
     @Test

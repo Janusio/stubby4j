@@ -7,6 +7,7 @@ import org.eclipse.jetty.http.HttpMethod;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Please refer to the accompanied unit tests for usage examples.
@@ -20,9 +21,9 @@ public final class YAMLBuilder {
     private static final String TWELVE_SPACE = String.format("%s%s", NINE_SPACE, THREE_SPACE);
 
     private final static String REQUEST = String.format("-%s%s", TWO_SPACE, "request:");
-    private final static String RESPONSE = String.format("%s%s", THREE_SPACE, "response:");
-
     private final static String DESCRIPTION = String.format("%s%s", THREE_SPACE, "description: ");
+    private final static String UUID = String.format("%s%s", THREE_SPACE, "uuid: ");
+    private final static String RESPONSE = String.format("%s%s", THREE_SPACE, "response:");
 
     private final static String HEADERS = String.format("%s%s", SIX_SPACE, "headers:");
     private final static String SEQUENCE_RESPONSE_HEADERS = String.format("%s%s", NINE_SPACE, "headers: ");
@@ -233,6 +234,12 @@ public final class YAMLBuilder {
 
         public Request withDescription(final String value) {
             REQUEST_STRING_BUILDER.append(NL).append(DESCRIPTION).append(value).append(NL);
+
+            return this;
+        }
+
+        public Request withUUID(final String value) {
+            REQUEST_STRING_BUILDER.append(NL).append(UUID).append(value).append(NL);
 
             return this;
         }

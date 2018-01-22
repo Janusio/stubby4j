@@ -60,6 +60,7 @@ import static io.github.azagniotov.stubby4j.yaml.ConfigurableYAMLProperty.FILE;
 import static io.github.azagniotov.stubby4j.yaml.ConfigurableYAMLProperty.METHOD;
 import static io.github.azagniotov.stubby4j.yaml.ConfigurableYAMLProperty.REQUEST;
 import static io.github.azagniotov.stubby4j.yaml.ConfigurableYAMLProperty.RESPONSE;
+import static io.github.azagniotov.stubby4j.yaml.ConfigurableYAMLProperty.UUID;
 import static io.github.azagniotov.stubby4j.yaml.ConfigurableYAMLProperty.isUnknownProperty;
 import static io.github.azagniotov.stubby4j.yaml.ConfigurableYAMLProperty.ofNullableProperty;
 import static java.util.Optional.of;
@@ -108,13 +109,16 @@ public class YAMLParser {
 
         for (final Map.Entry<String, Object> stubType : httpLifecycleConfig.entrySet()) {
             final Object stubTypeValue = stubType.getValue();
+            final String stubTypeKey = stubType.getKey();
 
-            if (DESCRIPTION.isA(stubType.getKey())) {
+            if (DESCRIPTION.isA(stubTypeKey)) {
                 stubBuilder.withDescription((String) stubType.getValue());
+            } else if (UUID.isA(stubTypeKey)) {
+                stubBuilder.withUUID((String) stubType.getValue());
             } else if (stubTypeValue instanceof Map) {
                 final Map<String, Object> stubbedProperties = asCheckedLinkedHashMap(stubTypeValue, String.class, Object.class);
 
-                if (REQUEST.isA(stubType.getKey())) {
+                if (REQUEST.isA(stubTypeKey)) {
                     parseStubbedRequestConfig(stubBuilder, stubbedProperties);
                 } else {
                     parseStubbedResponseConfig(stubBuilder, stubbedProperties);
